@@ -13,8 +13,7 @@ def insert_quote(obj):
 
 def list_lines():
     res = read_coll("lines",{})
-    response = {c["line"]:str(c["_id"]) for c in res}
-    return response
+    return res
 
 def get_quote(obj):
     if not check_params(obj,["id"]):
