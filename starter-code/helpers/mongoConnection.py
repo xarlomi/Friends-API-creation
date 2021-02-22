@@ -3,28 +3,24 @@ from pymongo import MongoClient
 client = MongoClient()
 db = client.friendsapi
 
-def insert(data,coll,database=db):
-    """
-    Function for inserting documents into a mongo collection.
-    data -> document to be inserted
-    coll -> string of collection name
-    database -> database object, defaults to hollywoodapi
-    """
-    res = database[coll].insert_one(data)
-    return res.inserted_id
+def read_coll(collection,query, client=client):
+    res = db[collection].find(query)
+    return list(res)
 
-def read(query,coll,database=db, project=None):
-    """
-    Function for reading documents of a mongo collection.
-    query -> filter for mongo query
-    coll -> string of collection name
-    database -> database object, defaults to hollywoodapi
-    """
-    # If project=None, all attributes will be shown
-    data = database[coll].find(query, project)
-    return list(data)
+def write_coll(collection, obj,client=client):
+    res = db[collection].insert_one(obj)
+    return res
 
-def delete(query, coll, database=db):
-    res = database[coll].deleteOne(query)
-    return f"{query} has been succesfully deleted"
+def update_coll(collection, query, update,client=client):
+    setting = {"$set":update}
+    res = db[collection].update_one(query,setting)
+    return res
 
+def delete_coll(collection, query, client=client):
+    res = db[collection].delete_one(query)
+    return res
+
+def push_coll(collection, query, update,client=client):
+    setting = {"$push":update}
+    res = db[collection].update_one(query,setting)
+    return res

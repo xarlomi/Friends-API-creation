@@ -1,125 +1,97 @@
 from flask import Flask, request
-from helpers.mongoConnection import  insert, read
-from bson import json_util, ObjectId
-from helpers.checking import check_mandatory
+from bson import json_util
+from helpers.characters import *
+from helpers.lines import *
+from helpers.episodes import *
 
-app = Flask("friendsapi")
+app = Flask(__name__)
+
+#characters.py
+
+@app.route("/characters/new")
+def  characters_new():
+    args = dict(request.args)
+    id = insert_character(args)
+    return json_util.dumps({"_id":id})
 
 @app.route("/characters")
 def characters():
-    # An empty dictionary as query will return all documents in collection
-    data = read({},"characters", project={"name":1})
-    # Because our data contains ObjectId's, that are not automatically converted to 
-    # data types compatible with json, we use `json_util.dumps` to do so.
-    return json_util.dumps(data)
+    return json_util.dumps(list_characters())
 
-# To fetch argument from endpoint, enclose in < > and add to function signature
-@app.route("/characters/details/<characters_id>")
-def characters_details(characters_id):
-    try:
-        id_ = ObjectId(characters_id)
-    except:
-        # Returning an int after json response will set it to the HTTP response code
-        # Default is 200 OK.
-        return {"Error":"characters_id not valid!"},400
-        # Error code 400 means Bad Request.
-    q = {"_id":id_}
-    data = read(q,"characters")
-    if len(data) == 0:
-        return {"Error":"No friends character with given id!"}
-    return json_util.dumps(data)
-
-
-@app.route("/characters/new")
-def characters_new():
-    # All the query parameters (The parameters following the ? on the url or the params in `requests.get`)
-    # are recognized by flask on a dictionary and stored in `request.args`
-    # This, however, is an InmutableDictionary object. We convert it to a regular dictionary.
+@app.route("/characters/details")
+def characters_details():
     args = dict(request.args)
-    # Checking if all necessary parameters were given
-    if not check_mandatory(args,["name", "personality", "job"]):
-        return {"Error":"missing obligatory parameter"}
-    
-    q = {"name":args["name"]}
-    # We try to find a celebrity with the same name
-    data = read(q,"characters")
-    # If there is any response, data will contain an element
-    if len(data)>0:
-        return {"Error":"Friends character already exists"}
-    res = insert(args,"characters")
-    return json_util.dumps({"_id":res})
+    return json_util.dumps(get_character(args))
 
-@app.route("/characters/remove")
-def characters_remove():
-    # All the query parameters (The parameters following the ? on the url or the params in `requests.get`)
-    # are recognized by flask on a dictionary and stored in `request.args`
-    # This, however, is an InmutableDictionary object. We convert it to a regular dictionary.
-    args = dict(requests.args)
-    # Checking if all necessary parameters were given
-    if not check_mandatory(args,"name"):
-        return {"Error":"missing obligatory parameter"}
-    
-    q = {"name":args["name"]}
-    # We try to find a celebrity with the same name
-    data = read(q,"characters")
-    # If there is any response, data will contain an element
-    if len(data)<0:
-        return {"Error":"Friends character not in our database"}
-    res = delete(args,"characters")
-    return json_util.dumps({"_id":res})
+@app.route("/characters/delete")
+def characters_delete():
+    args = dict(request.args)
+    return json_util.dumps(delete_character(args))
+
+@app.route("/characters/edit")
+def characters_edit():
+    args = dict(request.args)
+    return json_util.dumps(update_character(args))
+
+# lines.py
+
+@app.route("/lines/new")
+def  lines_new():
+    args = dict(request.args)
+    id = insert_quote(args)
+    return json_util.dumps({"_id":id})
 
 @app.route("/lines")
 def lines():
-    # An empty dictionary as query will return all documents in collection
-    data = read({},"lines", project={"line":1})
-    # Because our data contains ObjectId's, that are not automatically converted to 
-    # data types compatible with json, we use `json_util.dumps` to do so.
-    return json_util.dumps(data)
+    return json_util.dumps(list_lines())
 
-# To fetch argument from endpoint, enclose in < > and add to function signature
-@app.route("/lines/details/<lines_id>")
-def lines_details(lines_id):
-    try:
-        id_ = ObjectId(lines_id)
-    except:
-        # Returning an int after json response will set it to the HTTP response code
-        # Default is 200 OK.
-        return {"Error":"lines_id not valid!"},400
-        # Error code 400 means Bad Request.
-    q = {"_id":id_}
-    data = read(q,"lines")
-    if len(data) == 0:
-        return {"Error":"No characters´ lines with given id!"}
-    return json_util.dumps(data)
-
-@app.route("/lines/<name>")
-def names_details(name):
-    nombre =  (name)
-    q = {"name":nombre}
-    data = read(q,"lines")
-    if len(data) == 0:
-        return {"Error":"No characters´ lines with given name!"}
-    return json_util.dumps(data)
-
-
-
-@app.route("/lines/new")
-def lines_new():
-    # All the query parameters (The parameters following the ? on the url or the params in `requests.get`)
-    # are recognized by flask on a dictionary and stored in `request.args`
-    # This, however, is an InmutableDictionary object. We convert it to a regular dictionary.
+@app.route("/lines/details")
+def lines_details():
     args = dict(request.args)
-    # Checking if all necessary parameters were given
-    if not check_mandatory(args,["line", "name", "episode"]):
-        return {"Error":"missing obligatory parameter"}
-    
-    q = {"line":args["line"]}
-    # We try to find a celebrity with the same name
-    data = read(q,"lines")
-    # If there is any response, data will contain an element
-    if len(data)>0:
-        return {"Error":"That line already exists"}
-    res = insert(args,"lines")
-    return json_util.dumps({"_id":res})    
+    return json_util.dumps(get_quote(args))
 
-app.run(debug=True) 
+@app.route("/lines/delete")
+def lines_delete():
+    args = dict(request.args)
+    return json_util.dumps(delete_quote(args))
+
+@app.route("/lines/edit")
+def lines_edit():
+    args = dict(request.args)
+    return json_util.dumps(update_quote(args))
+
+
+@app.route("/characters/quotes")
+def characters_quotes():
+    args = dict(request.args)
+    return json_util.dumps(get_quotes(args))
+
+#episodes.py
+
+@app.route("/episodes/new")
+def  episodes_new():
+    args = dict(request.args)
+    id = insert_episode(args)
+    return json_util.dumps({"_id":id})
+
+@app.route("/episodes")
+def episodes():
+    return json_util.dumps(list_episodes())
+
+@app.route("/episodes/details")
+def episodes_details():
+    args = dict(request.args)
+    return json_util.dumps(get_episode(args))
+
+@app.route("/episodes/delete")
+def episodes_delete():
+    args = dict(request.args)
+    return json_util.dumps(delete_episode(args))
+
+@app.route("/lines/edit")
+def episodes_edit():
+    args = dict(request.args)
+    return json_util.dumps(update_episode(args))
+
+
+app.run(debug=True)
