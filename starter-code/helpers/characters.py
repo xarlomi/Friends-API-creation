@@ -43,13 +43,3 @@ def update_character(obj):
     update_coll("characters",q,obj)
     return {"response":200,"message":"character successfully updated"}
 
-def get_lines(obj):
-    if not check_params(obj,["id"]):
-        return {"response":400,"message":"Bad Request: 'id' is an obligatory parameter"}
-    q = {"_id":ObjectId(obj["id"])}
-    if not check_exists(q,"characters"):
-        return {"response":400,"message":"Bad Request: character with given id does not exist"}
-    cel = list(read_coll("celebrities",q))[0]
-    query = {"author":q["_id"]}
-    res = read_coll("lines",query)
-    return {"name":cel["name"],"quotes":[lines["line"] for lines in res]}
